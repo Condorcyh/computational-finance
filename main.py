@@ -69,7 +69,6 @@ print()
 
 # Part 2 i.a
 print("**********Part 2 i.a**********")
-consensus_expected_return = pd.read_excel('./assignment 1 stock data.xlsx', sheet_name=0)
 returns = util.getReturns()[0]
 update_returns = util.getReturns()[1]
 weight = np.array((0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1))
@@ -114,39 +113,15 @@ print()
 
 # Part 2 i.d
 print("**********Part 2 i.d**********")
-# 找到有效边界的拐点
-ind = np.argmin(target_variance)
-upper_half_deviation = target_variance[ind:]
-upper_half_returns = target_returns[ind:]
-tck = sci.splrep(upper_half_deviation, upper_half_returns)
-
-
-def f(x):
-    # 有效边界函数
-    return sci.splev(x, tck, der=0)
-
-
-def df(x):
-    # 有效边界函数f(x)的一阶导数函数
-    return sci.splev(x, tck, der=1)
-
-
-def equations(p, risk_free_return=0.043):
-    eq1 = risk_free_return - p[0]
-    eq2 = risk_free_return + p[1] * p[2] - f(p[2])
-    eq3 = p[1] - df(p[2])
-    return eq1, eq2, eq3
-
-
-res = sco.fsolve(equations, np.array([0.1, 0.1, 0.1]))
-x = res[2]  # 切点的横坐标，即标准差
-print('the optimal portfolio to be combined with the risk free asset')
-print('standard deviation = ' + str(x))
-print('expected return = ' + str(f(x)))
 # 还是用拉格朗日乘数法算weights
 optv = sco.minimize(lambda x: -util.statistics(x, returns, covariance)[2],
                     w0, method='SLSQP', bounds=bounds,
                     constraints={'type': 'eq', 'fun': lambda x: np.sum(x) - 1})
+print('the optimal portfolio to be combined with the risk free asset')
+std_deviation = util.statistics(optv.x, returns, covariance)[1]
+exp_return = 0.043 + (-optv.fun) * std_deviation
+print('standard deviation = ' + str(std_deviation))
+print('expected return = ' + str(exp_return))
 print('expected weights of the stocks = ', end='')
 print(optv.x)
 print()
